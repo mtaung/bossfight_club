@@ -4,9 +4,8 @@ from discord.ext.commands import Bot
 # Client Initialisation
 discordInfo = identities.DiscordConfig()
 PRAWConfig = identities.PRAWConfig()
-client = discord.Client()
-bot = Bot(command_prefix)
+bot = Bot('$')
 cogs.setup(bot)
 
 # Run Client
-client.run(discordInfo.discToken)
+bot.run(discordInfo.discToken)
