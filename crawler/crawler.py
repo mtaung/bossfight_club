@@ -1,4 +1,5 @@
 import praw, pickle, identities
+from requests_html import HTMLSession
 from db import db 
 from psaw import PushshiftAPI
 
@@ -18,7 +19,7 @@ class Crawler:
                                   username= user, 
                                   password= pwd, 
                                   user_agent= uage)
-
+        self.htmlsession = HTMLSession()
         self.bfSub = self.reddit.subreddit('bossfight')
 
     def cleanUrl(self, urlString):
@@ -26,15 +27,23 @@ class Crawler:
         Processes an image url to minimise links unrecognised by discord embed.
         This is to tackle an artifact returned by praw.
         """
-        if urlString[-1] == '.':
+        if urlString[-5:] == '.gifv':
             urlString = urlString[:-1]
             return urlString
-        else:
-            return urlString
+        if urlString.startswith('http://imgur.com') or urlString.startswith('https://imgur.com'):
+            r = session.get(urlString)
+            newUrlSearch = r.html.find('[rel=image_src]', first=True)
+            if newUrlSearch:
+                return newUrlSearch.attrs.get('href')
+            else:
+                newUrlSearch = r.html.find('[itemprop=embedURL]', first=True)
+                newUrl = newUrlSearch.attrs.get('content')
+                return newUrl[:-1]
 
     def spawnTop(self):
         """
         Pulls the top submissions from the subreddit of all time.
+        Returns a list of submission objects.
         """
         self.topBf = self.bfSub.top(limit=1000)
         return self.topBf
@@ -48,7 +57,7 @@ class Crawler:
         for i in roster:
             topComment = [comment.body for comment in i.comments if (hasattr(comment, 'body') and comment.distinguished==None)][0]
             url = self.cleanUrl(i.url)
-            yield i.id, i.title, url, topComment
+            yield i.id, i.title, i.score, url, topComment
 
     def weeklyUpdate(self):
         """
@@ -58,7 +67,7 @@ class Crawler:
         for i in weeklyBf:
             topComment = [comment.body for comment in i.comments if (hasattr(comment, 'body') and comment.distinguished==None)][0]
             url = self.cleanUrl(i.url)
-            yield i.id, i.title, url, topComment
+            yield i.id, i.title, i.score, url, topComment
 
     def pullBoss(self, urlIn):
         """
@@ -69,12 +78,13 @@ class Crawler:
         return (submission.id, submission.title, submission.score, url, submission.topComment)
 
 
-"""
+
 crawler = RedditCrawler()
 topBf = crawler.spawnTop()
 roster = crawler.generateBoss(topBf)
-database = db.Database()
 
-boss = database.randomBoss()
-for i in boss:
-    print(i)"""
+database = db.Database()
+database.initTables()
+
+for iid, ititle, url, topcomment in roster:
+    database.registerBoss((iid, ititle, url, topcomment))

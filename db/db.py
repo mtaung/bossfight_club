@@ -17,7 +17,15 @@ class Database:
         Creates tables in a new db file.
         Note this is only for initialisation. 
         """
-        self.c.execute('''CREATE TABLE bosses(sid, title, score, url, flavour)''')
+        self.c.execute('''CREATE TABLE bosses(sid, title, score INT, url, flavour)''')
+        self.c.execute('''CREATE TABLE users(did, roster, wins INT, losses INT)''')
+        self.c.execute('''CREATE TABLE spawned(bid INT PRIMARY KEY AUTOINCREMENT, \
+                       title, score, level INT, url, \
+                       statname1, statname2, statname3, statname4, statname5, \
+                       stat1 INT, stat2 INT, stat3 INT, stat4 INT, stat5 INT, \
+                       kills INT, alive BOOLEAN, flavour)''')
+        self.c.execute('''CREATE TABLE statnames(snid INT PRIMARY KEY AUTOINCREMENT, \
+                       statname, did)''')
 
     def registerBoss(self, boss):
         """
