@@ -1,6 +1,5 @@
 import praw, pickle
 from requests_html import HTMLSession
-from db import db 
 from psaw import PushshiftAPI
 
 class Crawler:
@@ -68,14 +67,3 @@ class Crawler:
         submission = self.reddit.submission(url=urlIn)
         url = self.cleanUrl(submission.url)
         return (submission.id, submission.title, submission.score, url, submission.topComment)
-
-    """def initialiseDb(self):
-        crawler = RedditCrawler()
-        topBf = crawler.spawnTop()
-        roster = crawler.generateBoss(topBf)
-
-        database = db.Database()
-        database.initTables()
-
-        for iid, ititle, iscore, url, topcomment in roster:
-            database.registerBoss((iid, ititle, iscore, url, topcomment))"""
