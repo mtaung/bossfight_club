@@ -1,17 +1,10 @@
 import praw, pickle
-from identities import PRAWConfig
 from requests_html import HTMLSession
 from db import db 
 from psaw import PushshiftAPI
 
-redditId = PRAWConfig()
-
 class Crawler:
-    def __init__(self, cid= redditId.cid, 
-                 sec= redditId.sec, 
-                 user= redditId.user, 
-                 pwd= redditId.pwd, 
-                 uage= redditId.uage):
+    def __init__(self, cid, sec, user, pwd, uage):
         """
         A crawler object based on the praw Reddit class. 
         """
@@ -76,7 +69,7 @@ class Crawler:
         url = self.cleanUrl(submission.url)
         return (submission.id, submission.title, submission.score, url, submission.topComment)
 
-    def initialiseDb(self):
+    """def initialiseDb(self):
         crawler = RedditCrawler()
         topBf = crawler.spawnTop()
         roster = crawler.generateBoss(topBf)
@@ -85,7 +78,4 @@ class Crawler:
         database.initTables()
 
         for iid, ititle, iscore, url, topcomment in roster:
-            database.registerBoss((iid, ititle, iscore, url, topcomment))
-
-crawler=Crawler()
-crawler.initialiseDb()
+            database.registerBoss((iid, ititle, iscore, url, topcomment))"""
