@@ -22,9 +22,9 @@ with open('roster.ini', 'r') as f:
             continue
         if ctype == 'image/jpeg':
             jpegs.append(url)
-        if ctype == 'image/png':
+        elif ctype == 'image/png':
             pngs.append(url)
-        if ctype == 'image/gif':
+        elif ctype == 'image/gif':
             gifs.append(url)
         else:
             others.append(url)
