@@ -46,9 +46,10 @@ class Crawler:
             roster = a list of submission objects
         """
         for i in roster:
-            topComment = [comment.body for comment in i.comments if (hasattr(comment, 'body') and comment.distinguished==None)][0]
-            url = self.cleanUrl(i.url)
-            yield i.id, i.title, i.score, url, topComment
+            #topComment = [comment.body for comment in i.comments if (hasattr(comment, 'body') and comment.distinguished==None)][0]
+            topComment = ''
+            #url = self.cleanUrl(i.url)
+            yield i.id, i.title, i.score, i.url, topComment
 
     def weeklyUpdate(self):
         """
