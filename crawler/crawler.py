@@ -1,9 +1,10 @@
-import praw, pickle, identities
+import praw, pickle
+from identities import PRAWConfig
 from requests_html import HTMLSession
 from db import db 
 from psaw import PushshiftAPI
 
-redditId = identities.PRAWConfig()
+redditId = PRAWConfig()
 
 class Crawler:
     def __init__(self, cid= redditId.cid, 
@@ -27,9 +28,6 @@ class Crawler:
         Processes an image url to minimise links unrecognised by discord embed.
         This is to tackle an artifact returned by praw.
         """
-        if urlString[-5:] == '.gifv':
-            urlString = urlString[:-1]
-            return urlString
         if urlString.startswith('http://imgur.com') or urlString.startswith('https://imgur.com'):
             r = session.get(urlString)
             newUrlSearch = r.html.find('[rel=image_src]', first=True)
@@ -38,7 +36,7 @@ class Crawler:
             else:
                 newUrlSearch = r.html.find('[itemprop=embedURL]', first=True)
                 newUrl = newUrlSearch.attrs.get('content')
-                return newUrl[:-1]
+                return newUrl
 
     def spawnTop(self):
         """
@@ -77,14 +75,16 @@ class Crawler:
         url = self.cleanUrl(submission.url)
         return (submission.id, submission.title, submission.score, url, submission.topComment)
 
+    def initialiseDb(self):
+        crawler = RedditCrawler()
+        topBf = crawler.spawnTop()
+        roster = crawler.generateBoss(topBf)
 
+        database = db.Database()
+        database.initTables()
 
-crawler = RedditCrawler()
-topBf = crawler.spawnTop()
-roster = crawler.generateBoss(topBf)
+        for iid, ititle, iscore, url, topcomment in roster:
+            database.registerBoss((iid, ititle, iscore, url, topcomment))
 
-database = db.Database()
-database.initTables()
-
-for iid, ititle, url, topcomment in roster:
-    database.registerBoss((iid, ititle, url, topcomment))
+crawler=Crawler()
+crawler.initialiseDb()
