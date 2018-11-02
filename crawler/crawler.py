@@ -22,6 +22,7 @@ class Crawler:
                                   user_agent= uage)
         self.htmlsession = HTMLSession()
         self.bfSub = self.reddit.subreddit('bossfight')
+        self.session = HTMLSession()
 
     def cleanUrl(self, urlString):
         """
@@ -29,7 +30,7 @@ class Crawler:
         This is to tackle an artifact returned by praw.
         """
         if urlString.startswith('http://imgur.com') or urlString.startswith('https://imgur.com'):
-            r = session.get(urlString)
+            r = self.session.get(urlString)
             newUrlSearch = r.html.find('[rel=image_src]', first=True)
             if newUrlSearch:
                 return newUrlSearch.attrs.get('href')
