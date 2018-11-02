@@ -1,4 +1,4 @@
-import configparser, discord, cogs
+import configparser, discord
 from discord.ext.commands import Bot
 from crawler.crawler import Crawler
 

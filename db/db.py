@@ -29,7 +29,7 @@ class Database:
 
     def registerBoss(self, boss):
         """
-        Registers a boss to the db.
+        Registers a boss to the bosses table.
         Parameters:
             boss = a tuple of required boss info
         """

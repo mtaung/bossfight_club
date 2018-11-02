@@ -1,7 +1,7 @@
 import discord, asyncio
 from discord.ext import commands
-from db import Database
-from crawler import Crawler
+from db.db import Database
+from crawler.crawler import Crawler
 
 class Fightclub:
     def __init__(self):
