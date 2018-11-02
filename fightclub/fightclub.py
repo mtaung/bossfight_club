@@ -3,16 +3,16 @@ from discord.ext import commands
 from db import Database
 from crawler import Crawler
 
-database= Database()
-
 class Fightclub:
-    async def auction(self, num):
-        cards = database.randomBoss(f'{num}')
-        
+    def __init__(self):
+        self.database = Database()
 
+    async def auction(self, num):
+        self.cards = self.database.randomBoss(f'{num}')
+        
     @commands.command(pass_context=True)
     async def gacha(self, ctx):
-        pull = database.randomBoss('1')
+        pull = self.database.randomBoss('1')
         pull = pull[0] #Query returns list, need to go a level deeper
 
         embed = discord.Embed(title=f'{pull[1]}', description=f'Power Level: {pull[2]}')
