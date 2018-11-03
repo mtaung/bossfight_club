@@ -6,6 +6,8 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
     id = Column(String(20), primary_key=True)
+    badge = Column(String(300))
+    color = Column(Integer)
     wins = Column(Integer)
     losses = Column(Integer)
 
