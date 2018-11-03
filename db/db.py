@@ -17,7 +17,7 @@ class Database:
         Creates tables in a new db file.
         Note this is only for initialisation. 
         """
-        self.c.execute('''CREATE TABLE bosses(sid, title, score INT, url, flavour)''')
+        self.c.execute('''CREATE TABLE bosses(sid, title, score INT, url, flavour, season INT)''')
         self.c.execute('''CREATE TABLE users(did, roster, wins INT, losses INT)''')
         self.c.execute('''CREATE TABLE spawned(bid INTEGER PRIMARY KEY AUTOINCREMENT, \
                        title, score, level INT, url, \
@@ -33,8 +33,8 @@ class Database:
         Parameters:
             boss = a tuple of required boss info
         """
-        self.c.execute("INSERT INTO bosses (sid, title, score, url, flavour) VALUES (?, ?, ?, ?, ?)", boss)                
-        
+        self.c.execute("INSERT INTO bosses (sid, title, score, url, flavour, season) VALUES (?, ?, ?, ?, ?, ?)", boss)   
+
     def commit(self):
         """
         Commits changes to db.
