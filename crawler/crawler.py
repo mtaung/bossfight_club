@@ -14,6 +14,7 @@ class Crawler:
                                   user_agent= uage)
         self.bfSub = self.reddit.subreddit('bossfight')
         self.session = HTMLSession()
+        self.pushShift = PushshiftAPI(self.reddit)
     
     def extractImgurUrl(self, urlString):
         """
@@ -59,7 +60,19 @@ class Crawler:
                 return None
             return self.getUsableUrl(newUrl)
 
-    def spawnTop(self):
+    def queryPS(self, len, threshold=1000):
+        """
+        Pulls the top {len} submissions from the subreddit within specified threshold.
+        Should returns a list of submission objects.
+        """
+        result = list(self.pushShift.search_submissions(subreddit='bossfight', 
+                                                        limit=len, sort='desc', 
+                                                        sort_type='score', 
+                                                        score=>threshold,
+                                                        is_video='false'))
+        return results
+
+    def queryTop(self):
         """
         Pulls the top submissions from the subreddit of all time.
         Returns a list of submission objects.
