@@ -10,6 +10,7 @@ class User(Base):
     color = Column(Integer)
     wins = Column(Integer)
     losses = Column(Integer)
+    pulls = Column(Integer)
 
 class Card(Base):
     __tablename__ = 'cards'
