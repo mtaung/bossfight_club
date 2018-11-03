@@ -60,15 +60,15 @@ class Crawler:
                 return None
             return self.getUsableUrl(newUrl)
 
-    def queryPS(self, len, threshold=1000):
+    def queryPS(self, length, threshold=1000):
         """
         Pulls the top {len} submissions from the subreddit within specified threshold.
         Should returns a list of submission objects.
         """
-        result = list(self.pushShift.search_submissions(subreddit='bossfight', 
-                                                        limit=len, sort='desc', 
+        results = list(self.pushShift.search_submissions(subreddit='bossfight', 
+                                                        limit=length, sort='desc', 
                                                         sort_type='score', 
-                                                        score=>threshold,
+                                                        score='>{}'.format(threshold),
                                                         is_video='false'))
         return results
 
@@ -92,7 +92,7 @@ class Crawler:
             url = self.getUsableUrl(i.url)
             if not url:
                 continue
-            yield i.id, i.title, i.score, i.url, topComment
+            yield i.id, i.title, i.score, url, topComment
 
     def weeklyUpdate(self):
         """

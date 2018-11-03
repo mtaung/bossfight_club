@@ -6,7 +6,8 @@ config.read('config.ini')
 
 pi = config['PRAWInfo']
 crawler = Crawler(pi['cid'], pi['sec'], pi['user'], pi['pwd'], pi['uage'])
-topBf = crawler.queryTop()
+#topBf = crawler.queryTop()
+topBf = crawler.queryPS(2000, 100)
 roster = crawler.generateBoss(topBf)
 
 with open('roster.ini', 'w') as f:
