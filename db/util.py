@@ -14,6 +14,8 @@ class BasicInterface:
         if kwargs:
             dbo = self.Table(**kwargs)
             self.session.add(dbo)
+            return dbo
+        return None
     
     def count(self):
         return self.session.query(self.Table).count()

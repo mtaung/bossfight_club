@@ -14,8 +14,14 @@ class Fightclub:
             nick = user.name
         return nick
     
-    def unregistered_message(self, nick):
-        return f"Hello, {nick}\nYou are not yet part of the game. Use $register to sign up. You will get 5 free random cards and 1 free card per day. Use $gacha to pull cards."
+    async def registration_check(self, ctx):
+        user_id = ctx.message.author.id
+        user = self.db.users.get(user_id)
+        if not user:
+            msg = f"You are not a registered member of Fight Club. Use $info for more information."
+            await ctx.bot.send_message(ctx.message.channel, msg)
+            raise commands.CheckFailure()
+        return user
 
     @commands.command(pass_context=True)
     async def info(self, ctx):
@@ -24,15 +30,16 @@ class Fightclub:
         user_id = ctx.message.author.id
         nick = self.get_nick(ctx.message.author)
         user = self.db.users.get(user_id)
-        if not user:
-            await ctx.bot.send_message(ctx.message.channel, self.unregistered_message(nick))
-            return
-        status = f"Welcome back, {nick}\nYour score is [{user.wins} wins : {user.losses} losses] You have {user.pulls} pulls remaining."
+        if user:
+            status = f"Welcome back, {nick}\nYour score is [{user.wins} wins : {user.losses} losses] You have {user.pulls} pulls remaining."
+        else:
+            status = f"Hello, {nick}\nYou are not yet part of the game. Use $register to sign up. You will get 5 random cards and 1 card per day. Use $gacha to pull cards."
         msg = "```{}\n{}```".format(welcome, status)
         await ctx.bot.send_message(ctx.message.channel, msg)
     
     @commands.command(pass_context=True)
     async def register(self, ctx):
+        """Join the Fight Club."""
         user_id = ctx.message.author.id
         nick = self.get_nick(ctx.message.author)
         user = self.db.users.get(user_id)
@@ -47,11 +54,10 @@ class Fightclub:
     @commands.command(pass_context=True)
     async def custom(self, ctx, param, value):
         """Usage: custom color FFDE16 | custom badge http://badge-url.jpg"""
-        user_id = ctx.message.author.id
-        user = self.db.users.get(user_id)
+        user = await self.registration_check(ctx)
         if not user:
             return
-        #todo: verify input
+        #TODO: verify input
         if param == 'color':
             user.color = int(value, 16)
             self.db.commit()
@@ -83,13 +89,48 @@ class Fightclub:
 
     @commands.command(pass_context=True)
     async def gacha(self, ctx):
-        user_id = ctx.message.author.id
-        user = self.db.users.get(user_id)
-        if not user:
-            nick = self.get_nick(ctx.message.author)
-            await ctx.bot.send_message(ctx.message.channel, self.unregistered_message(nick))
+        """Receive a random card."""
+        user = await self.registration_check(ctx)
+        if not user.pulls:
+            msg = "You have no more pulls left."
+            await ctx.bot.send_message(ctx.message.channel, msg)
             return
         card = self.random_card()
-        #todo: add card to user's roster
-        embed = self.embed_card(user, card, None)
+        #TODO: generate move names here
+        roster_entry = self.db.rosters.add(user_id=user.id, card_id=card.id, score=card.score)
+        embed = self.embed_card(user, card, roster_entry)
+        user.pulls -= 1
+        self.db.commit()
         await ctx.bot.send_message(ctx.message.channel, embed=embed)
+    
+    def format_roster_entry(self, entry):
+        card = self.db.cards.get(entry.card_id)
+        col1 = str(card.id)
+        col1 += ' '*(5 - len(col1))
+        col2 = str(card.name)
+        if len(col2) > 50:
+            col2 = col2[:47]
+            col2 += '...'
+        else:
+            col2 += ' '*(50 - len(col2))
+        return f"#{col1} {col2} p:{entry.score}"
+
+    @commands.command(pass_context=True)
+    async def roster(self, ctx):
+        """List the cards you own."""
+        user = await self.registration_check(ctx)
+        nick = self.get_nick(ctx.message.author)
+        entries = self.db.rosters.user_inventory(user.id)
+        msg = f"```{nick}'s cards:"
+        for e in entries:
+            msg += '\n'
+            msg += self.format_roster_entry(e)
+        msg += f"```"
+        await ctx.bot.send_message(ctx.message.channel, msg)
+    
+    @commands.command(pass_context=True)
+    async def cheat(self, ctx):
+        """Cheat yourself some pulls for testing."""
+        user = await self.registration_check(ctx)
+        user.pulls += 5
+        self.db.commit()
