@@ -16,7 +16,7 @@ class Fightclub:
         pull = pull[0] #Query returns list, need to go a level deeper
 
         # Card Formatting
-        embed = discord.Embed(title=f'Power Level: {pull[2]}', colour=discord.Colour.gold())
+        embed = discord.Embed(title=f'Power Level: {pull[2]}', colour=discord.Colour(value=16777215))
         embed.set_author(name=f'{pull[1]}', icon_url='https://pbs.twimg.com/media/DT3rkg0VAAAYAKR.jpg')
         embed.set_image(url=pull[3])
         embed.add_field(name='Attack Name', value='Attack Value', inline=True)
