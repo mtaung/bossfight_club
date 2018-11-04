@@ -7,10 +7,10 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(String(20), primary_key=True)
     badge = Column(String(300))
-    color = Column(Integer)
-    wins = Column(Integer)
-    losses = Column(Integer)
-    pulls = Column(Integer)
+    color = Column(Integer, default=0x000000)
+    wins = Column(Integer, default=0)
+    losses = Column(Integer, default=0)
+    pulls = Column(Integer, default=0)
 
 class Card(Base):
     __tablename__ = 'cards'
