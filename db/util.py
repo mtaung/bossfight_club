@@ -14,6 +14,12 @@ class BasicInterface:
         if kwargs:
             dbo = self.Table(**kwargs)
             self.session.add(dbo)
+    
+    def count(self):
+        return self.session.query(self.Table).count()
+    
+    def getrow(self, row):
+        return self.session.query(self.Table).offset(row).first()
 
 class CardInterface(BasicInterface):
     def sid_exists(self, sid):
@@ -28,7 +34,10 @@ class DatabaseInterface:
     def __init__(self, url):
         engine = create_engine(url)
         Session = sessionmaker(bind=engine)
-        main_session = Session()
-        self.users = BasicInterface(tables.User, main_session)
-        self.cards = CardInterface(tables.Card, main_session)
-        self.rosters = RosterInterface(tables.Roster, main_session)
+        self.main_session = Session()
+        self.users = BasicInterface(tables.User, self.main_session)
+        self.cards = CardInterface(tables.Card, self.main_session)
+        self.rosters = RosterInterface(tables.Roster, self.main_session)
+    
+    def commit(self):
+        self.main_session.commit()

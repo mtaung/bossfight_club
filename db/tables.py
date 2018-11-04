@@ -25,6 +25,7 @@ class Roster(Base):
     id = Column(Integer, Sequence('roster_id_sequence'), primary_key=True)
     user_id = Column(String(20), ForeignKey("users.id"), nullable=False)
     card_id = Column(Integer, ForeignKey("cards.id"), nullable=False)
+    score = Column(Integer)
     move_1 = Column(String(30))
     move_2 = Column(String(30))
     move_3 = Column(String(30))
