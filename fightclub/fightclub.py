@@ -196,22 +196,23 @@ class Fightclub:
             return
         # verify that card id is valid
         entry = self.db.rosters.get(card)
-        if not entry:
+        if not entry or entry.user_id != user.id:
             await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
             return
         # set up the duel
         _card = self.db.cards.get(entry.card_id)
         # check if the opponent has issued a challenge already
         # pop challenge if exists
-        opp_entry = self.challenges.pop((opp_user.id, user.id), None)
-        if not opp_entry:
+        opp_id = self.challenges.pop((opp_user.id, user.id), None)
+        if not opp_id:
             # they haven't, so we issue a challenge message
             self.challenges[(user.id, opp_user.id)] = entry.id
             await ctx.bot.send_message(ctx.message.channel, f"{nick} has challenged {opp_nick} to a duel with {_card.name}")
             return
         else:
             # they have, begin duel
-            await ctx.bot.send_message(ctx.message.channel, f"{nick} accepts {opp_nick}'s challenge with his champion, {_card.name}\nBegin duel!")
+            await ctx.bot.send_message(ctx.message.channel, f"{nick} accepts {opp_nick}'s challenge with his champion, {_card.name}")
+            opp_entry = self.db.rosters.get(opp_id)
             opp_card = self.db.cards.get(opp_entry.card_id)
             # 3 rounds
             total = 0
