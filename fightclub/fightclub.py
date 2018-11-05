@@ -1,4 +1,5 @@
 import discord, asyncio, random, math
+from datetime import date
 from discord.ext import commands
 from db.util import DatabaseInterface
 from .name_generator import generate_attack_names
@@ -14,6 +15,7 @@ class Fightclub:
     def __init__(self, bot):
         self.bot = bot
         self.db = bot.database
+        self.challenges = []
     
     def get_nick(self, user):
         nick = user.nick
@@ -54,7 +56,7 @@ class Fightclub:
             msg = "You are already a member of Fight Club."
         else:
             msg = "Welcome, {}. You have been awarded 5 free card pulls. Use $gacha to get your cards!".format(nick)
-            self.db.users.add(id = user_id, pulls = 5)
+            self.db.users.add(id = user_id, pulls = 5, last_pull_date = date.min)
             self.db.commit()
         await ctx.bot.send_message(ctx.message.channel, msg)
     
@@ -79,12 +81,10 @@ class Fightclub:
         else:
             embed.set_author(name=f'{card.name}')
         embed.set_image(url=card.image)
-        #unfinished
         embed.add_field(name=roster.attack_0, value=f'might: {roster.power_0}', inline=True)
         embed.add_field(name=roster.attack_1, value=f'might: {roster.power_1}', inline=True)
         embed.add_field(name=roster.attack_2, value=f'might: {roster.power_2}', inline=True)
         embed.add_field(name=roster.attack_3, value=f'might: {roster.power_3}', inline=True)
-        #
         return embed
     
     def random_card(self):
@@ -116,10 +116,16 @@ class Fightclub:
     async def gacha(self, ctx):
         """Receive a random card."""
         user = await self.registration_check(ctx)
-        if not user.pulls:
-            msg = "You have no more pulls left."
-            await ctx.bot.send_message(ctx.message.channel, msg)
-            return
+        if user.last_pull_date >= date.today():
+            # has no daily pull
+            if not user.pulls:
+                msg = "You have no more pulls left."
+                await ctx.bot.send_message(ctx.message.channel, msg)
+                return
+            else:
+                user.pulls -= 1
+        else:
+            user.last_pull_date = date.today()
         card = self.random_card()
         attacks = generate_attack_names(card.name)
         score = card.score if card.score > 400 else 400
@@ -128,13 +134,12 @@ class Fightclub:
         power_0=1, power_1=1, power_2=1, power_3=1)
         self.give_exp(roster_entry, 0)
         embed = self.embed_card(user, card, roster_entry)
-        user.pulls -= 1
         self.db.commit()
         await ctx.bot.send_message(ctx.message.channel, embed=embed)
     
     def format_roster_entry(self, entry):
         card = self.db.cards.get(entry.card_id)
-        col1 = str(card.id)
+        col1 = str(entry.id)
         col1 += ' '*(5 - len(col1))
         col2 = str(card.name)
         if len(col2) > 50:

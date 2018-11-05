@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Sequence, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Sequence, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -11,6 +11,7 @@ class User(Base):
     wins = Column(Integer, default=0)
     losses = Column(Integer, default=0)
     pulls = Column(Integer, default=0)
+    last_pull_date = Column(Date)
 
 class Card(Base):
     __tablename__ = 'cards'
