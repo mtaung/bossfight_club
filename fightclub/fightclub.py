@@ -162,6 +162,19 @@ class Fightclub:
         msg += f"```"
         await ctx.bot.send_message(ctx.message.channel, msg)
     
+    @commands.command(pass_context=True)
+    async def show(self, ctx, card):
+        """Displays a card from your roster."""
+        user = await self.registration_check(ctx)
+        # verify that card id is valid
+        entry = self.db.rosters.get(card)
+        if not entry or entry.user_id != user.id:
+            await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
+            return
+        _card = self.db.cards.get(entry.id)
+        embed = self.embed_card(user, _card, entry)
+        await ctx.bot.send_message(ctx.message.channel, embed=embed)
+    
     def get_attack(self, entry, num):
         name = getattr(entry, f'attack_{num}')
         power = getattr(entry, f'power_{num}')
