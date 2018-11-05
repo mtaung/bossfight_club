@@ -171,7 +171,7 @@ class Fightclub:
         if not entry or entry.user_id != user.id:
             await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
             return
-        _card = self.db.cards.get(entry.id)
+        _card = self.db.cards.get(entry.card_id)
         embed = self.embed_card(user, _card, entry)
         await ctx.bot.send_message(ctx.message.channel, embed=embed)
     
