@@ -162,6 +162,27 @@ class Fightclub:
         msg += f"```"
         await ctx.bot.send_message(ctx.message.channel, msg)
     
+    def get_attack(self, entry, num):
+        name = getattr(entry, f'attack_{num}')
+        power = getattr(entry, f'power_{num}')
+        return name, power
+
+    def combat_round(self, entry1, name1, entry2, name2):
+        e1 = self.get_attack(entry1, random.randint(0, 3))
+        e2 = self.get_attack(entry2, random.randint(0, 3))
+        r1 = random.randint(1, 6) + e1[1]
+        r2 = random.randint(1, 6) + e2[1]
+        if r1 == r2:
+            # tie
+            msg = f"{name1}'s {e1[0]} and {name2}'s {e2[0]} were evenly matched! [{r1} vs {r2}]"
+            return 0, msg
+        elif r1 > r2:
+            msg = f"{name1}'s {e1[0]} overwhelmed {name2}'s {e2[0]}! [{r1} vs {r2}]"
+            return -1, msg
+        else:
+            msg = f"{name2}'s {e2[0]} overwhelmed {name1}'s {e1[0]}! [{r2} vs {r1}]"
+            return 1, msg
+    
     @commands.command(pass_context=True)
     async def duel(self, ctx, opponent:discord.Member, card:int):
         """Duel someone else with a card from your roster."""
@@ -179,15 +200,50 @@ class Fightclub:
             await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
             return
         # set up the duel
-        _card = self.db.cards.get(entry.id)
+        _card = self.db.cards.get(entry.card_id)
         # check if the opponent has issued a challenge already
         # pop challenge if exists
-        opp_card = self.challenges.pop((opp_user.id, user.id), None)
-        if not opp_card:
+        opp_entry = self.challenges.pop((opp_user.id, user.id), None)
+        if not opp_entry:
             # they haven't, so we issue a challenge message
             self.challenges[(user.id, opp_user.id)] = entry.id
             await ctx.bot.send_message(ctx.message.channel, f"{nick} has challenged {opp_nick} to a duel with {_card.name}")
             return
         else:
             # they have, begin duel
-            await ctx.bot.send_message(ctx.message.channel, f"Not implemented yet.")
+            await ctx.bot.send_message(ctx.message.channel, f"{nick} accepts {opp_nick}'s challenge with his champion, {_card.name}\nBegin duel!")
+            opp_card = self.db.cards.get(opp_entry.card_id)
+            # 3 rounds
+            total = 0
+            content = "Begin duel!"
+            msg = await ctx.bot.send_message(ctx.message.channel, content)
+            for i in range(3):
+                r, text = self.combat_round(entry, _card.name, opp_entry, opp_card.name)
+                total += r
+                content += '\n' + text
+                await asyncio.sleep(2)
+                await ctx.bot.edit_message(msg, content)
+            if total == 0:
+                # tie
+                content += '\n' + "Nobody wins."
+                await ctx.bot.edit_message(msg, content)
+            elif total < 0:
+                user.wins += 1
+                opp_user.losses += 1
+                prev_level = entry.level
+                exp_gain = opp_entry.level * 100
+                content += '\n' + f"Congratulations, {nick}, {_card.name} is victorious and gains {exp_gain} exp!"
+                await ctx.bot.edit_message(msg, content)
+                self.give_exp(entry, exp_gain)
+                if prev_level < entry.level:
+                    await ctx.bot.send_message(ctx.message.channel, f"{_card.name} has leveled up!")
+            elif total > 0:
+                opp_user.wins += 1
+                user.losses += 1
+                prev_level = opp_entry.level
+                exp_gain = entry.level * 100
+                content += '\n' + f"Congratulations, {opp_nick}, {opp_card.name} is victorious and gains {exp_gain} exp!"
+                await ctx.bot.edit_message(msg, content)
+                self.give_exp(opp_entry, exp_gain)
+                if prev_level < opp_entry.level:
+                    await ctx.bot.send_message(ctx.message.channel, f"{_card.name} has leveled up!")
