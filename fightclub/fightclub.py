@@ -1,7 +1,7 @@
 import discord, asyncio, random
 from discord.ext import commands
 from db.util import DatabaseInterface
-from crawler.crawler import Crawler
+from .name_generator import generate_attack_names
 
 class Fightclub:
     def __init__(self, bot):
@@ -66,19 +66,17 @@ class Fightclub:
             self.db.commit()
     
     def embed_card(self, user, card, roster):
-        #unfinished
-        #should be roster.score
-        embed = discord.Embed(title=f'Power Level: {card.score}', colour=discord.Colour(value=user.color))
+        embed = discord.Embed(title=f'Power Level: {roster.score}', colour=discord.Colour(value=user.color))
         if user.badge:
             embed.set_author(name=f'{card.name}', icon_url=user.badge)
         else:
             embed.set_author(name=f'{card.name}')
         embed.set_image(url=card.image)
         #unfinished
-        embed.add_field(name='Attack Name', value='Attack Value', inline=True)
-        embed.add_field(name='Attack Name', value='Attack Value', inline=True)
-        embed.add_field(name='Attack Name', value='Attack Value', inline=True)
-        embed.add_field(name='Attack Name', value='Attack Value', inline=True)
+        embed.add_field(name=roster.attack_0, value='Attack Value', inline=True)
+        embed.add_field(name=roster.attack_1, value='Attack Value', inline=True)
+        embed.add_field(name=roster.attack_2, value='Attack Value', inline=True)
+        embed.add_field(name=roster.attack_3, value='Attack Value', inline=True)
         #
         return embed
     
@@ -96,8 +94,9 @@ class Fightclub:
             await ctx.bot.send_message(ctx.message.channel, msg)
             return
         card = self.random_card()
-        #TODO: generate move names here
-        roster_entry = self.db.rosters.add(user_id=user.id, card_id=card.id, score=card.score)
+        attacks = generate_attack_names(card.name)
+        roster_entry = self.db.rosters.add(user_id=user.id, card_id=card.id, score=card.score,\
+        attack_0=attacks[0], attack_1=attacks[1], attack_2=attacks[2], attack_3=attacks[3])
         embed = self.embed_card(user, card, roster_entry)
         user.pulls -= 1
         self.db.commit()
