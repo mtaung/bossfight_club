@@ -15,7 +15,7 @@ class Fightclub:
     def __init__(self, bot):
         self.bot = bot
         self.db = bot.database
-        self.challenges = []
+        self.challenges = dict()
     
     def get_nick(self, user):
         nick = user.nick
@@ -163,8 +163,31 @@ class Fightclub:
         await ctx.bot.send_message(ctx.message.channel, msg)
     
     @commands.command(pass_context=True)
-    async def cheat(self, ctx):
-        """Cheat yourself some pulls for testing."""
+    async def duel(self, ctx, opponent:discord.Member, card:int):
+        """Duel someone else with a card from your roster."""
         user = await self.registration_check(ctx)
-        user.pulls += 5
-        self.db.commit()
+        nick = self.get_nick(ctx.message.author)
+        opp_user = self.db.users.get(opponent.id)
+        opp_nick = self.get_nick(opponent)
+        # verify that opponent can be challenged
+        if not opp_user:
+            await ctx.bot.send_message(ctx.message.channel, f"{opp_nick} is not a member of Fight Club.")
+            return
+        # verify that card id is valid
+        entry = self.db.rosters.get(card)
+        if not entry:
+            await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
+            return
+        # set up the duel
+        _card = self.db.cards.get(entry.id)
+        # check if the opponent has issued a challenge already
+        # pop challenge if exists
+        opp_card = self.challenges.pop((opp_user.id, user.id), None)
+        if not opp_card:
+            # they haven't, so we issue a challenge message
+            self.challenges[(user.id, opp_user.id)] = entry.id
+            await ctx.bot.send_message(ctx.message.channel, f"{nick} has challenged {opp_nick} to a duel with {_card.name}")
+            return
+        else:
+            # they have, begin duel
+            await ctx.bot.send_message(ctx.message.channel, f"Not implemented yet.")
