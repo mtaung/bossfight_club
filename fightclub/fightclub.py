@@ -207,6 +207,9 @@ class Fightclub:
         if not opp_user:
             await ctx.bot.send_message(ctx.message.channel, f"{opp_nick} is not a member of Fight Club.")
             return
+        if opp_user.id == user.id:
+            await ctx.bot.send_message(ctx.message.channel, f"You can't duel yourself.")
+            return
         # verify that card id is valid
         entry = self.db.rosters.get(card)
         if not entry or entry.user_id != user.id:
