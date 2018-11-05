@@ -1,7 +1,14 @@
-import discord, asyncio, random
+import discord, asyncio, random, math
 from discord.ext import commands
 from db.util import DatabaseInterface
 from .name_generator import generate_attack_names
+
+def level_formula(exp):
+    #500 exp ~ level 1
+    #1'700 ~ level 5
+    #8'000 ~ level 10
+    #20'000 ~ level 12
+    return math.floor((math.log(exp, 400) - 1) * 20) + 1
 
 class Fightclub:
     def __init__(self, bot):
@@ -66,17 +73,17 @@ class Fightclub:
             self.db.commit()
     
     def embed_card(self, user, card, roster):
-        embed = discord.Embed(title=f'Power Level: {roster.score}', colour=discord.Colour(value=user.color))
+        embed = discord.Embed(title=f'Level: {roster.level} ({roster.score} xp)', colour=discord.Colour(value=user.color))
         if user.badge:
             embed.set_author(name=f'{card.name}', icon_url=user.badge)
         else:
             embed.set_author(name=f'{card.name}')
         embed.set_image(url=card.image)
         #unfinished
-        embed.add_field(name=roster.attack_0, value='Attack Value', inline=True)
-        embed.add_field(name=roster.attack_1, value='Attack Value', inline=True)
-        embed.add_field(name=roster.attack_2, value='Attack Value', inline=True)
-        embed.add_field(name=roster.attack_3, value='Attack Value', inline=True)
+        embed.add_field(name=roster.attack_0, value=f'might: {roster.power_0}', inline=True)
+        embed.add_field(name=roster.attack_1, value=f'might: {roster.power_1}', inline=True)
+        embed.add_field(name=roster.attack_2, value=f'might: {roster.power_2}', inline=True)
+        embed.add_field(name=roster.attack_3, value=f'might: {roster.power_3}', inline=True)
         #
         return embed
     
@@ -84,6 +91,26 @@ class Fightclub:
         total_cards = self.db.cards.count()
         rand = int(total_cards * random.random())
         return self.db.cards.getrow(rand)
+    
+    def level_up(self, entry):
+        entry.level += 1
+        # 4 skill points per level up, randomly distributed
+        points = 4
+        r = range(points)
+        alloc = [0, 0, 0, 0]
+        for i in r:
+            alloc[random.choice(r)] += 1
+        entry.power_0 += alloc[0]
+        entry.power_1 += alloc[1]
+        entry.power_2 += alloc[2]
+        entry.power_3 += alloc[3]
+    
+    def give_exp(self, entry, exp):
+        entry.score += exp
+        new_level = level_formula(entry.score)
+        while entry.level < new_level:
+            self.level_up(entry)
+        self.db.commit()
 
     @commands.command(pass_context=True)
     async def gacha(self, ctx):
@@ -95,8 +122,11 @@ class Fightclub:
             return
         card = self.random_card()
         attacks = generate_attack_names(card.name)
-        roster_entry = self.db.rosters.add(user_id=user.id, card_id=card.id, score=card.score,\
-        attack_0=attacks[0], attack_1=attacks[1], attack_2=attacks[2], attack_3=attacks[3])
+        score = card.score if card.score > 400 else 400
+        roster_entry = self.db.rosters.add(user_id=user.id, card_id=card.id, level=0, score=score,\
+        attack_0=attacks[0], attack_1=attacks[1], attack_2=attacks[2], attack_3=attacks[3],\
+        power_0=1, power_1=1, power_2=1, power_3=1)
+        self.give_exp(roster_entry, 0)
         embed = self.embed_card(user, card, roster_entry)
         user.pulls -= 1
         self.db.commit()
@@ -112,7 +142,7 @@ class Fightclub:
             col2 += '...'
         else:
             col2 += ' '*(50 - len(col2))
-        return f"#{col1} {col2} p:{entry.score}"
+        return f"#{col1} {col2} lvl:{entry.level}"
 
     @commands.command(pass_context=True)
     async def roster(self, ctx):
