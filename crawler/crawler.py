@@ -1,6 +1,5 @@
 import praw, pickle
 from requests_html import HTMLSession
-from db import db 
 from psaw import PushshiftAPI
 
 class Crawler:
@@ -13,26 +12,67 @@ class Crawler:
                                   username= user, 
                                   password= pwd, 
                                   user_agent= uage)
-        self.htmlsession = HTMLSession()
         self.bfSub = self.reddit.subreddit('bossfight')
         self.session = HTMLSession()
-
-    def cleanUrl(self, urlString):
+        self.pushShift = PushshiftAPI(self.reddit)
+    
+    def extractImgurUrl(self, urlString):
         """
         Processes an image url to minimise links unrecognised by discord embed.
         This is to tackle an artifact returned by praw.
         """
-        if urlString.startswith('http://imgur.com') or urlString.startswith('https://imgur.com'):
+        try:
             r = self.session.get(urlString)
-            newUrlSearch = r.html.find('[rel=image_src]', first=True)
-            if newUrlSearch:
-                return newUrlSearch.attrs.get('href')
-            else:
-                newUrlSearch = r.html.find('[itemprop=embedURL]', first=True)
-                newUrl = newUrlSearch.attrs.get('content')
-                return newUrl
+        except:
+            return None
+        if r.status_code != 200:
+            return None
+        element = r.html.find('[rel=image_src]', first=True)
+        if not element:
+            return None
+        """else:
+            newUrlSearch = r.html.find('[itemprop=embedURL]', first=True)
+            newUrl = newUrlSearch.attrs.get('content')
+            return newUrl"""
+        return element.attrs.get('href')
 
-    def spawnTop(self):
+    def extractUrl(self, urlString):
+        if urlString.startswith('http://imgur.com') or urlString.startswith('https://imgur.com'):
+            return self.extractImgurUrl(urlString)
+        else:
+            return None
+    
+    def getUsableUrl(self, urlString):
+        try:
+            r = self.session.head(urlString)
+        except:
+            return None
+        if r.status_code != 200:
+            return None
+        ctype = r.headers.get('content-type')
+        if not ctype:
+            return None
+        if ctype == 'image/jpeg' or ctype == 'image/png' or ctype == 'image/gif':
+            return urlString
+        else:
+            newUrl = self.extractUrl(urlString)
+            if not newUrl:
+                return None
+            return self.getUsableUrl(newUrl)
+
+    def queryPS(self, length, threshold=1000):
+        """
+        Pulls the top {len} submissions from the subreddit within specified threshold.
+        Should returns a list of submission objects.
+        """
+        results = list(self.pushShift.search_submissions(subreddit='bossfight', 
+                                                        limit=length, sort='desc', 
+                                                        sort_type='score', 
+                                                        score='>{}'.format(threshold),
+                                                        is_video='false'))
+        return results
+
+    def queryTop(self):
         """
         Pulls the top submissions from the subreddit of all time.
         Returns a list of submission objects.
@@ -48,7 +88,10 @@ class Crawler:
         """
         for i in roster:
             topComment = [comment.body for comment in i.comments if (hasattr(comment, 'body') and comment.distinguished==None)][0]
-            url = self.cleanUrl(i.url)
+            #topComment = ''
+            url = self.getUsableUrl(i.url)
+            if not url:
+                continue
             yield i.id, i.title, i.score, url, topComment
 
     def weeklyUpdate(self):
@@ -58,7 +101,9 @@ class Crawler:
         weeklyBf = self.bfSub.top(limit=20)
         for i in weeklyBf:
             topComment = [comment.body for comment in i.comments if (hasattr(comment, 'body') and comment.distinguished==None)][0]
-            url = self.cleanUrl(i.url)
+            url = self.getUsableUrl(i.url)
+            if not url:
+                continue
             yield i.id, i.title, i.score, url, topComment
 
     def pullBoss(self, urlIn):
@@ -66,16 +111,7 @@ class Crawler:
         Returns a tuple of a boss from a specific submission url.
         """
         submission = self.reddit.submission(url=urlIn)
-        url = self.cleanUrl(submission.url)
+        url = self.getUsableUrl(submission.url)
+        if not url:
+            raise Exception("rip")
         return (submission.id, submission.title, submission.score, url, submission.topComment)
-
-    """def initialiseDb(self):
-        crawler = RedditCrawler()
-        topBf = crawler.spawnTop()
-        roster = crawler.generateBoss(topBf)
-
-        database = db.Database()
-        database.initTables()
-
-        for iid, ititle, iscore, url, topcomment in roster:
-            database.registerBoss((iid, ititle, iscore, url, topcomment))"""

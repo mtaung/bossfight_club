@@ -1,16 +1,17 @@
-import configparser, discord
+import configparser, discord, os, sys
 from discord.ext.commands import Bot
 from crawler.crawler import Crawler
+from db.util import DatabaseInterface
 
 # Module Initialization
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-pi = config['PRAWInfo']
-crawler = Crawler(pi['cid'], pi['sec'], pi['user'], pi['pwd'], pi['uage']) #wot we do with this
+db = DatabaseInterface('sqlite:///fightclub.db')
 
 # Client Initialisation
 bot = Bot('$')
+bot.database = db
 start_modules = ['fightclub']
 for name in start_modules:
     bot.load_extension('fightclub')
