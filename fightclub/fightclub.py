@@ -129,7 +129,7 @@ class Fightclub:
         card = self.random_card()
         attacks = generate_attack_names(card.name)
         score = card.score if card.score > 400 else 400
-        roster_entry = self.db.rosters.add(user_id=user.id, card_id=card.id, level=0, score=score,\
+        roster_entry = self.db.rosters.add(user=user, card=card, level=0, score=score,\
         attack_0=attacks[0], attack_1=attacks[1], attack_2=attacks[2], attack_3=attacks[3],\
         power_0=1, power_1=1, power_2=1, power_3=1)
         self.give_exp(roster_entry, 0)
@@ -138,7 +138,7 @@ class Fightclub:
         await ctx.bot.send_message(ctx.message.channel, embed=embed)
     
     def format_roster_entry(self, entry):
-        card = self.db.cards.get(entry.card_id)
+        card = entry.card
         col1 = str(entry.id)
         col1 += ' '*(5 - len(col1))
         col2 = str(card.name)
@@ -154,7 +154,7 @@ class Fightclub:
         """List the cards you own."""
         user = await self.registration_check(ctx)
         nick = self.get_nick(ctx.message.author)
-        entries = self.db.rosters.user_inventory(user.id)
+        entries = user.roster
         msg = f"```{nick}'s cards:"
         for e in entries:
             msg += '\n'
@@ -171,7 +171,7 @@ class Fightclub:
         if not entry or entry.user_id != user.id:
             await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
             return
-        _card = self.db.cards.get(entry.card_id)
+        _card = entry.card
         embed = self.embed_card(user, _card, entry)
         await ctx.bot.send_message(ctx.message.channel, embed=embed)
     
@@ -216,7 +216,7 @@ class Fightclub:
             await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
             return
         # set up the duel
-        _card = self.db.cards.get(entry.card_id)
+        _card = entry.card
         # check if the opponent has issued a challenge already
         # pop challenge if exists
         opp_id = self.challenges.pop((opp_user.id, user.id), None)
@@ -229,7 +229,7 @@ class Fightclub:
             # they have, begin duel
             await ctx.bot.send_message(ctx.message.channel, f"{nick} accepts {opp_nick}'s challenge with his champion, {_card.name}")
             opp_entry = self.db.rosters.get(opp_id)
-            opp_card = self.db.cards.get(opp_entry.card_id)
+            opp_card = opp_entry.card
             # 3 rounds
             total = 0
             content = "Begin duel!"
