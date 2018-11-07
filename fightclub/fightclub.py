@@ -3,13 +3,7 @@ from datetime import date
 from discord.ext import commands
 from db.util import DatabaseInterface
 from .name_generator import generate_attack_names
-
-def level_formula(exp):
-    #500 exp ~ level 1
-    #1'700 ~ level 5
-    #8'000 ~ level 10
-    #20'000 ~ level 12
-    return math.floor((math.log(exp, 400) - 1) * 20) + 1
+from formulae import level_formula
 
 class Fightclub:
     def __init__(self, bot):
@@ -66,7 +60,6 @@ class Fightclub:
         user = await self.registration_check(ctx)
         if not user:
             return
-        #TODO: verify input
         if param == 'color':
             user.color = int(value, 16)
             self.db.commit()
@@ -81,16 +74,11 @@ class Fightclub:
         else:
             embed.set_author(name=f'{card.name}')
         embed.set_image(url=card.image)
-        embed.add_field(name=roster.attack_0, value=f'might: {roster.power_0}', inline=True)
-        embed.add_field(name=roster.attack_1, value=f'might: {roster.power_1}', inline=True)
-        embed.add_field(name=roster.attack_2, value=f'might: {roster.power_2}', inline=True)
-        embed.add_field(name=roster.attack_3, value=f'might: {roster.power_3}', inline=True)
+        embed.add_field(name=roster.attack_0, value=f'🗡️ {roster.power_0}', inline=True)
+        embed.add_field(name=roster.attack_1, value=f'🗡️ {roster.power_1}', inline=True)
+        embed.add_field(name=roster.attack_2, value=f'🗡️ {roster.power_2}', inline=True)
+        embed.add_field(name=roster.attack_3, value=f'🗡️ {roster.power_3}', inline=True)
         return embed
-    
-    def random_card(self):
-        total_cards = self.db.cards.count()
-        rand = int(total_cards * random.random())
-        return self.db.cards.getrow(rand)
     
     def level_up(self, entry):
         entry.level += 1
@@ -111,31 +99,6 @@ class Fightclub:
         while entry.level < new_level:
             self.level_up(entry)
         self.db.commit()
-
-    @commands.command(pass_context=True)
-    async def gacha(self, ctx):
-        """Receive a random card."""
-        user = await self.registration_check(ctx)
-        if user.last_pull_date >= date.today():
-            # has no daily pull
-            if not user.pulls:
-                msg = "You have no more pulls left."
-                await ctx.bot.send_message(ctx.message.channel, msg)
-                return
-            else:
-                user.pulls -= 1
-        else:
-            user.last_pull_date = date.today()
-        card = self.random_card()
-        attacks = generate_attack_names(card.name)
-        score = card.score if card.score > 400 else 400
-        roster_entry = self.db.rosters.add(user=user, card=card, level=0, score=score,\
-        attack_0=attacks[0], attack_1=attacks[1], attack_2=attacks[2], attack_3=attacks[3],\
-        power_0=1, power_1=1, power_2=1, power_3=1)
-        self.give_exp(roster_entry, 0)
-        embed = self.embed_card(user, card, roster_entry)
-        self.db.commit()
-        await ctx.bot.send_message(ctx.message.channel, embed=embed)
     
     def format_roster_entry(self, entry):
         card = entry.card

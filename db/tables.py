@@ -41,3 +41,7 @@ class Roster(Base):
     power_1 = Column(Integer, default=1)
     power_2 = Column(Integer, default=1)
     power_3 = Column(Integer, default=1)
+    max_health = Column(Integer, default=10)
+    current_health Column(Integer, default=10)
+    kills = Column(Integer, default=0)
+    alive = Column(Boolean, default=True)
