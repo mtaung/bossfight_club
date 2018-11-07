@@ -10,21 +10,6 @@ class Fightclub:
         self.bot = bot
         self.db = bot.database
         self.challenges = dict()
-    
-    def get_nick(self, user):
-        nick = user.nick
-        if not nick:
-            nick = user.name
-        return nick
-    
-    async def registration_check(self, ctx):
-        user_id = ctx.message.author.id
-        user = self.db.users.get(user_id)
-        if not user:
-            msg = f"You are not a registered member of Fight Club. Use $info for more information."
-            await ctx.bot.send_message(ctx.message.channel, msg)
-            raise commands.CheckFailure()
-        return user
 
     @commands.command(pass_context=True)
     async def info(self, ctx):
@@ -66,77 +51,6 @@ class Fightclub:
         elif param == 'badge':
             user.badge = value
             self.db.commit()
-    
-    def embed_card(self, user, card, roster):
-        embed = discord.Embed(title=f'Level: {roster.level} ({roster.score} xp)', colour=discord.Colour(value=user.color))
-        if user.badge:
-            embed.set_author(name=f'{card.name}', icon_url=user.badge)
-        else:
-            embed.set_author(name=f'{card.name}')
-        embed.set_image(url=card.image)
-        embed.add_field(name=roster.attack_0, value=f'🗡️ {roster.power_0}', inline=True)
-        embed.add_field(name=roster.attack_1, value=f'🗡️ {roster.power_1}', inline=True)
-        embed.add_field(name=roster.attack_2, value=f'🗡️ {roster.power_2}', inline=True)
-        embed.add_field(name=roster.attack_3, value=f'🗡️ {roster.power_3}', inline=True)
-        return embed
-    
-    def level_up(self, entry):
-        entry.level += 1
-        # 4 skill points per level up, randomly distributed
-        points = 4
-        r = range(points)
-        alloc = [0, 0, 0, 0]
-        for i in r:
-            alloc[random.choice(r)] += 1
-        entry.power_0 += alloc[0]
-        entry.power_1 += alloc[1]
-        entry.power_2 += alloc[2]
-        entry.power_3 += alloc[3]
-    
-    def give_exp(self, entry, exp):
-        entry.score += exp
-        new_level = level_formula(entry.score)
-        while entry.level < new_level:
-            self.level_up(entry)
-        self.db.commit()
-    
-    def format_roster_entry(self, entry):
-        card = entry.card
-        col1 = str(entry.id)
-        col1 += ' '*(5 - len(col1))
-        col2 = str(card.name)
-        if len(col2) > 50:
-            col2 = col2[:47]
-            col2 += '...'
-        else:
-            col2 += ' '*(50 - len(col2))
-        return f"#{col1} {col2} lvl:{entry.level}"
-
-    @commands.command(pass_context=True)
-    async def roster(self, ctx):
-        """List the cards you own."""
-        user = await self.registration_check(ctx)
-        nick = self.get_nick(ctx.message.author)
-        entries = user.roster
-        msg = f"```{nick}'s cards:"
-        for e in entries:
-            msg += '\n'
-            msg += self.format_roster_entry(e)
-        msg += f"```"
-        await ctx.bot.send_message(ctx.message.channel, msg)
-    
-    @commands.command(pass_context=True)
-    async def show(self, ctx, card):
-        """Displays a card from your roster."""
-        user = await self.registration_check(ctx)
-        # verify that card id is valid
-        entry = self.db.rosters.get(card)
-        if not entry or entry.user_id != user.id:
-            await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
-            return
-        _card = entry.card
-        embed = self.embed_card(user, _card, entry)
-        await ctx.bot.send_message(ctx.message.channel, embed=embed)
     
     def get_attack(self, entry, num):
         name = getattr(entry, f'attack_{num}')
