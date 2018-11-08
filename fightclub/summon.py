@@ -1,4 +1,4 @@
-
+from util import registration_check, embed_card, get_nick, give_exp
 
 class Summon:
 
@@ -12,9 +12,9 @@ class Summon:
         return self.db.cards.getrow(rand)
     
     @commands.command(pass_context=True)
-    async def gacha(self, ctx):
+    async def summon(self, ctx):
         """Receive a random card."""
-        user = await self.registration_check(ctx)
+        user = await registration_check(ctx, self.db)
         if user.last_pull_date >= date.today():
             # has no daily pull
             if not user.pulls:
@@ -32,7 +32,7 @@ class Summon:
         attack_0=attacks[0], attack_1=attacks[1], attack_2=attacks[2], attack_3=attacks[3],\
         power_0=1, power_1=1, power_2=1, power_3=1)
         self.give_exp(roster_entry, 0)
-        embed = self.embed_card(user, card, roster_entry)
+        embed = embed_card(user, card, roster_entry)
         self.db.commit()
         await ctx.bot.send_message(ctx.message.channel, embed=embed)
     
@@ -51,8 +51,8 @@ class Summon:
     @commands.command(pass_context=True)
     async def roster(self, ctx):
         """List the cards you own."""
-        user = await self.registration_check(ctx)
-        nick = self.get_nick(ctx.message.author)
+        user = await registration_check(ctx, self.db)
+        nick = get_nick(ctx.message.author)
         entries = user.roster
         msg = f"```{nick}'s cards:"
         for e in entries:
@@ -64,12 +64,12 @@ class Summon:
     @commands.command(pass_context=True)
     async def show(self, ctx, card):
         """Displays a card from your roster."""
-        user = await self.registration_check(ctx)
+        user = await registration_check(ctx, self.db)
         # verify that card id is valid
         entry = self.db.rosters.get(card)
         if not entry or entry.user_id != user.id:
             await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
             return
         _card = entry.card
-        embed = self.embed_card(user, _card, entry)
+        embed = embed_card(user, _card, entry)
         await ctx.bot.send_message(ctx.message.channel, embed=embed)

@@ -4,6 +4,7 @@ from discord.ext import commands
 from db.util import DatabaseInterface
 from .name_generator import generate_attack_names
 from formulae import level_formula
+from fightclub import registration_check
 
 class Fightclub:
     def __init__(self, bot):
@@ -16,7 +17,7 @@ class Fightclub:
         """I can talk about Fight Club."""
         welcome = "Fight Club. A game based on /r/bossfight."
         user_id = ctx.message.author.id
-        nick = self.get_nick(ctx.message.author)
+        nick = get_nick(ctx.message.author)
         user = self.db.users.get(user_id)
         if user:
             status = f"Welcome back, {nick}\nYour score is [{user.wins} wins : {user.losses} losses] You have {user.pulls} pulls remaining."
@@ -29,7 +30,7 @@ class Fightclub:
     async def register(self, ctx):
         """Join the Fight Club."""
         user_id = ctx.message.author.id
-        nick = self.get_nick(ctx.message.author)
+        nick = get_nick(ctx.message.author)
         user = self.db.users.get(user_id)
         if user:
             msg = "You are already a member of Fight Club."
@@ -42,7 +43,7 @@ class Fightclub:
     @commands.command(pass_context=True)
     async def custom(self, ctx, param, value):
         """Usage: custom color FFDE16 | custom badge http://badge-url.jpg"""
-        user = await self.registration_check(ctx)
+        user = await registration_check(ctx, self.db)
         if not user:
             return
         if param == 'color':
@@ -76,10 +77,10 @@ class Fightclub:
     @commands.command(pass_context=True)
     async def duel(self, ctx, opponent:discord.Member, card:int):
         """Duel someone else with a card from your roster."""
-        user = await self.registration_check(ctx)
-        nick = self.get_nick(ctx.message.author)
+        user = await registration_check(ctx, self.db)
+        nick = get_nick(ctx.message.author)
         opp_user = self.db.users.get(opponent.id)
-        opp_nick = self.get_nick(opponent)
+        opp_nick = get_nick(opponent)
         # verify that opponent can be challenged
         if not opp_user:
             await ctx.bot.send_message(ctx.message.channel, f"{opp_nick} is not a member of Fight Club.")

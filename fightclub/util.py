@@ -1,6 +1,6 @@
 import discord
 
-async def registration_check(self, ctx):
+async def registration_check(ctx, db):
     user_id = ctx.message.author.id
     user = db.users.get(user_id)
     if not user:
@@ -52,5 +52,5 @@ def give_exp(entry, exp):
     entry.score += exp
     new_level = level_formula(entry.score)
     while entry.level < new_level:
-        self.level_up(entry)
+        level_up(entry)
     self.db.commit()
