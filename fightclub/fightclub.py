@@ -3,7 +3,7 @@ from datetime import date
 from discord.ext import commands
 from db.util import DatabaseInterface
 from .name_generator import generate_attack_names
-from fightclub.util import registration_check
+from fightclub.util import registration_check, get_nick
 
 class Fightclub:
     def __init__(self, bot):
