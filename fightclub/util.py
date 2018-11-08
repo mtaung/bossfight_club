@@ -48,9 +48,9 @@ def level_up(entry):
     entry.power_2 += alloc[2]
     entry.power_3 += alloc[3]
 
-def give_exp(entry, exp):
+def give_exp(entry, exp, db):
     entry.score += exp
     new_level = level_formula(entry.score)
     while entry.level < new_level:
         level_up(entry)
-    self.db.commit()
+    db.commit()

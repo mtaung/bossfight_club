@@ -3,8 +3,7 @@ from datetime import date
 from discord.ext import commands
 from db.util import DatabaseInterface
 from .name_generator import generate_attack_names
-from formulae import level_formula
-from fightclub import registration_check
+from fightclub.util import registration_check
 
 class Fightclub:
     def __init__(self, bot):
@@ -129,7 +128,7 @@ class Fightclub:
                 exp_gain = opp_entry.level * 100
                 content += '\n' + f"Congratulations, {nick}, {_card.name} is victorious and gains {exp_gain} exp!"
                 await ctx.bot.edit_message(msg, content)
-                self.give_exp(entry, exp_gain)
+                give_exp(entry, exp_gain, self.db)
                 if prev_level < entry.level:
                     await ctx.bot.send_message(ctx.message.channel, f"{_card.name} has leveled up!")
             elif total > 0:
@@ -139,6 +138,6 @@ class Fightclub:
                 exp_gain = entry.level * 100
                 content += '\n' + f"Congratulations, {opp_nick}, {opp_card.name} is victorious and gains {exp_gain} exp!"
                 await ctx.bot.edit_message(msg, content)
-                self.give_exp(opp_entry, exp_gain)
+                give_exp(opp_entry, exp_gain, self.db)
                 if prev_level < opp_entry.level:
                     await ctx.bot.send_message(ctx.message.channel, f"{_card.name} has leveled up!")
