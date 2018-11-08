@@ -11,9 +11,10 @@ class User(Base):
     color = Column(Integer, default=0x000000)
     wins = Column(Integer, default=0)
     losses = Column(Integer, default=0)
-    pulls = Column(Integer, default=0)
+    draws = Column(Integer, default=0)
     last_pull_date = Column(Date)
     roster = relationship("Roster", back_populates="user")
+    humiliations = Column(Integer, default=0)
 
 class Card(Base):
     __tablename__ = 'cards'

@@ -29,7 +29,7 @@ def embed_card(user, card, roster):
     embed.add_field(name=roster.attack_1, value=f'🗡️ {roster.power_1}', inline=True)
     embed.add_field(name=roster.attack_2, value=f'🗡️ {roster.power_2}', inline=True)
     embed.add_field(name=roster.attack_3, value=f'🗡️ {roster.power_3}', inline=True)
-    embed.set_footer(text=f'Fighter of {roster.user}, slayer of {roster.kills} foes.')
+    embed.set_footer(text=f'Slayer of {roster.kills} foes.')
     return embed
 
 def level_formula(exp):

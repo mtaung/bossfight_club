@@ -65,13 +65,15 @@ class Fightclub:
         if r1 == r2:
             # tie
             msg = f"{name1}'s {e1[0]} and {name2}'s {e2[0]} were evenly matched! [{r1} vs {r2}]"
-            return 0, msg
+            return 0, msg, None
         elif r1 > r2:
-            msg = f"{name1}'s {e1[0]} overwhelmed {name2}'s {e2[0]}! [{r1} vs {r2}]"
-            return -1, msg
+            dmg = r1 - r2
+            msg = f"{name1}'s {e1[0]} overwhelmed {name2}'s {e2[0]} and dealt {dmg} damage! [{r1} vs {r2}]"
+            return dmg, msg, entry2, entry1
         else:
-            msg = f"{name2}'s {e2[0]} overwhelmed {name1}'s {e1[0]}! [{r2} vs {r1}]"
-            return 1, msg
+            dmg = r2 - r1
+            msg = f"{name2}'s {e2[0]} overwhelmed {name1}'s {e1[0]} and dealt {dmg} damage! [{r2} vs {r1}]"
+            return dmg, msg, entry1, entry2
     
     @commands.command(pass_context=True)
     async def duel(self, ctx, opponent:discord.Member, card:int):
@@ -92,6 +94,7 @@ class Fightclub:
         if not entry or entry.user_id != user.id:
             await ctx.bot.send_message(ctx.message.channel, f"Card #{card} not found in your roster.")
             return
+
         # set up the duel
         _card = entry.card
         # check if the opponent has issued a challenge already
@@ -100,11 +103,11 @@ class Fightclub:
         if not opp_id:
             # they haven't, so we issue a challenge message
             self.challenges[(user.id, opp_user.id)] = entry.id
-            await ctx.bot.send_message(ctx.message.channel, f"{nick} has challenged {opp_nick} to a duel with {_card.name}")
+            await ctx.bot.send_message(ctx.message.channel, f"{nick} has challenged {opp_nick} to a duel with {_card.name}!")
             return
         else:
             # they have, begin duel
-            await ctx.bot.send_message(ctx.message.channel, f"{nick} accepts {opp_nick}'s challenge with his champion, {_card.name}")
+            await ctx.bot.send_message(ctx.message.channel, f"{nick} accepts {opp_nick}'s challenge with his champion, {_card.name}!")
             opp_entry = self.db.rosters.get(opp_id)
             opp_card = opp_entry.card
             # 3 rounds
@@ -112,12 +115,26 @@ class Fightclub:
             content = "Begin duel!"
             msg = await ctx.bot.send_message(ctx.message.channel, content)
             for i in range(3):
-                r, text = self.combat_round(entry, _card.name, opp_entry, opp_card.name)
-                total += r
+                dmg, text, loser, winner = self.combat_round(entry, _card.name, opp_entry, opp_card.name)
+                if loser:
+                    loser.current_health -= dmg
+                    if loser.current_health <= 0:
+                        await ctx.bot.edit_message(ctx.message.channel, f"{loser.card.name} has fallen to {winner.card.name}!", content)
+                        loser.alive = False
+                        winner.kills += 1
+                        if winner.kills%5 == 0:
+                            winner.user.pulls += 1
                 content += '\n' + text
-                await asyncio.sleep(2)
+                await asyncio.sleep(3)
                 await ctx.bot.edit_message(msg, content)
-            if total == 0:
+
+
+
+
+
+
+
+"""            if total == 0:
                 # tie
                 content += '\n' + "Nobody wins."
                 await ctx.bot.edit_message(msg, content)
@@ -140,4 +157,4 @@ class Fightclub:
                 await ctx.bot.edit_message(msg, content)
                 give_exp(opp_entry, exp_gain, self.db)
                 if prev_level < opp_entry.level:
-                    await ctx.bot.send_message(ctx.message.channel, f"{_card.name} has leveled up!")
+                    await ctx.bot.send_message(ctx.message.channel, f"{_card.name} has leveled up!")"""
