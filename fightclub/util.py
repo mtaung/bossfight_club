@@ -1,4 +1,5 @@
-import discord
+import discord, math, random
+
 
 async def registration_check(ctx, db):
     user_id = ctx.message.author.id
@@ -16,7 +17,7 @@ def get_nick(user):
     return nick
 
 def embed_card(user, card, roster):
-    embed = discord.Embed(title=f'{roster.current_health}/{roster.max_health}', 
+    embed = discord.Embed(title=f'❤️ {roster.current_health}/{roster.max_health}', 
                           description=f'Level: {roster.level} ({roster.score} xp)', 
                           colour=discord.Colour(value=user.color))
     if user.badge:
@@ -28,7 +29,7 @@ def embed_card(user, card, roster):
     embed.add_field(name=roster.attack_1, value=f'🗡️ {roster.power_1}', inline=True)
     embed.add_field(name=roster.attack_2, value=f'🗡️ {roster.power_2}', inline=True)
     embed.add_field(name=roster.attack_3, value=f'🗡️ {roster.power_3}', inline=True)
-    embed.set_footer(f'Fighter of {roster.user}, slayer of {roster.kills} foes.')
+    embed.set_footer(text=f'Fighter of {roster.user}, slayer of {roster.kills} foes.')
     return embed
 
 def level_formula(exp):
@@ -44,13 +45,13 @@ def level_up(entry):
     lvlupGains = 4
     r = range(lvlupGains)
     alloc = [0, 0, 0, 0, 0]
-    for i in r:
-        alloc[random.choice(r)] += 1
+    for i in range(lvlupGains):
+        alloc[random.choice(range(5))] += 1
     entry.power_0 += alloc[0]
     entry.power_1 += alloc[1]
     entry.power_2 += alloc[2]
     entry.power_3 += alloc[3]
-    entry.max_health += alloc[4]*2
+    entry.max_health += alloc[4]
     entry.current_health = entry.max_health
 
 def give_exp(entry, exp, db):
