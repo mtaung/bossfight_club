@@ -1,5 +1,6 @@
 from discord.ext import commands
 from fightclub.util import registration_check, embed_card, get_nick, give_exp
+from fightclub.name_generator import generate_attack_names
 import random
 from datetime import date
 
@@ -33,7 +34,7 @@ class Summon:
         score = card.score if card.score > 400 else 400
         roster_entry = self.db.rosters.add(user=user, card=card, level=0, score=score,\
         attack_0=attacks[0], attack_1=attacks[1], attack_2=attacks[2], attack_3=attacks[3],\
-        power_0=1, power_1=1, power_2=1, power_3=1)
+        power_0=1, power_1=1, power_2=1, power_3=1, max_health=10, current_health=10)
         give_exp(roster_entry, 0, self.db)
         embed = embed_card(user, card, roster_entry)
         self.db.commit()

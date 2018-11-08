@@ -19,9 +19,9 @@ class Fightclub:
         nick = get_nick(ctx.message.author)
         user = self.db.users.get(user_id)
         if user:
-            status = f"Welcome back, {nick}\nYour score is [{user.wins} wins : {user.losses} losses] You have {user.pulls} pulls remaining."
+            status = f"Welcome back, master {nick}\nYour score is [{user.wins} wins : {user.losses} losses] You have {user.pulls} pulls remaining."
         else:
-            status = f"Hello, {nick}\nYou are not yet part of the game. Use $register to sign up. You will get 5 random cards and 1 card per day. Use $gacha to pull cards."
+            status = f"Hello, {nick}\nYou are not yet part of the game. Use $register to sign up. You will get 5 random cards and 1 card per day. Use $summon to pull cards."
         msg = "```{}\n{}```".format(welcome, status)
         await ctx.bot.send_message(ctx.message.channel, msg)
     
