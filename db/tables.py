@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Sequence, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Sequence, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -42,6 +42,6 @@ class Roster(Base):
     power_2 = Column(Integer, default=1)
     power_3 = Column(Integer, default=1)
     max_health = Column(Integer, default=10)
-    current_health Column(Integer, default=10)
+    current_health = Column(Integer, default=10)
     kills = Column(Integer, default=0)
     alive = Column(Boolean, default=True)
