@@ -51,7 +51,7 @@ def level_up(entry):
     entry.power_1 += alloc[1]
     entry.power_2 += alloc[2]
     entry.power_3 += alloc[3]
-    entry.max_health += alloc[4]
+    entry.max_health += alloc[4]*2
     entry.current_health = entry.max_health
 
 def give_exp(entry, exp, db):
