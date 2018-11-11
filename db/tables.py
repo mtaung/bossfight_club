@@ -47,6 +47,10 @@ class Roster(Base):
     defense = Column(Integer, default=0)
     attack = Column(Integer, default=0)
 
+class Roster(Base):
+    __tablename__ = 'attacks'
+    id = Column(Integer, Sequence('cards_id_sequence'), primary_key=True)
+    card_id = relationship("Rosters", back_populates="id")
     skillname_0 = Column(String(30))
     skillname_1 = Column(String(30))
     skillname_2 = Column(String(30))

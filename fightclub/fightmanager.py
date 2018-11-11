@@ -35,6 +35,12 @@ lobby_list = list<Card>
 
     #==============INSERT ACTUAL ROUND LOGIC BELOW THIS POINT==============
         
+    #Populate card's allies and enemies list
+
+    for card in fight_list:
+        card.set_allies("Filtered fight_list with only cards with the same team_id.")
+        card.set_enemies("Filtered fight_list with all the other cards.")
+    
     #The idea is, since each Card is its own Class, to just call the .attack() function
     #while going down the fight_list.
     
