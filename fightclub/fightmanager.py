@@ -1,22 +1,22 @@
-import time
 import discord
 import asyncio
 import random
-import card
 from discord.ext import commands
+from operator import itemgetter, attrgetter
+from fightclub import card
 
 
 class FightManager:
 
-#The lobby list will be a list of Cards, the Cards themselves will host the list of current users.
-#Empty when no lobby is active.
-lobby_list = list<Card>
-
+    #The lobby list will be a list of Cards, the Cards themselves will host the list of current users.
+    #Empty when no lobby is active.
+    lobby_list = list(card)
+    
     #Command to start a lobby or join an existing fight.
     #Inputs will be Team_ID and Card_ID.
     #Team_ID will be a user generated string, everyone using the same string will be on the same team.
 
-    async def lobby(self,ctx)
+    async def lobby(self,ctx):
 
         #Info to grab from the user is the discord ID to check card ownership
         #If everything its ok it will return a list of Card with all the card info in it.
@@ -31,7 +31,7 @@ lobby_list = list<Card>
     #Get all the cards IDs and tell the db to return them ordered by Initiative.
     #Then pass the lobby_list to a fight_list.
 
-    fight_list = Get_IDs_And_Return_Ordered_By_Initiative(lobby_list)
+    fight_list = sorted(lobby_list, key=attrgetter("initiative"), reverse=False)
 
     #==============INSERT ACTUAL ROUND LOGIC BELOW THIS POINT==============
         
