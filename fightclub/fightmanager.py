@@ -20,7 +20,7 @@ class FightManager:
 
         #Info to grab from the user is the discord ID to check card ownership
         #If everything its ok it will return a list of Card with all the card info in it.
-        lobby_list.add(Insert_Actual_Check_Funtion_Here("Discord ID", "Team_ID", "List of Cards to check"))
+        self.lobby_list.append(Insert_Actual_Check_Funtion_Here("Discord ID", "Team_ID", "List of Cards to check"))
 
         #If error return message telling to check the Cards and retry again
         #This should be done inside the previous ownership check
