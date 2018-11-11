@@ -2,6 +2,7 @@ import time
 import discord
 import asyncio
 import random
+import card
 from discord.ext import commands
 
 
@@ -36,7 +37,10 @@ lobby_list = list<Card>
         
     #The idea is, since each Card is its own Class, to just call the .attack() function
     #while going down the fight_list.
-
+    
+    for card in fight_list:
+        card.attack(fight_list)
+    
     #The effects of the attacks will be applied when the cards attack, that means that if a card dies, its removed from the list
     #so it won't be target nor actor from that point forwards.
     #Each Card will also have a list of "Friendly" and "Enemy" IDs to know what to target.
