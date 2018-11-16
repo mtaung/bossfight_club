@@ -10,7 +10,7 @@ config.read('config.ini')
 db = DatabaseInterface('sqlite:///fightclub.db')
 
 # Client Initialisation
-bot = Bot('$')
+bot = Bot('€')
 bot.database = db
 start_modules = ['fightclub']
 for name in start_modules:

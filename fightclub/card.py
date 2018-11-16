@@ -14,6 +14,7 @@ class Card:
         self.allies = list(int)
         self.enemies = list(int)
         
+        
         #Populate card stats.
         self.user_id = user_id
         self.card_id = card_id
